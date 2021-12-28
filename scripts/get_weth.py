@@ -4,6 +4,8 @@ from brownie import interface, config, network
 def main():
     get_weth()
 
+# We interact with the WETH contract to change ETH to WETH (erc20)
+# then we can use WETH to interact with AAVE
 def get_weth():
     """
     Mints WETH by depositing ETH
