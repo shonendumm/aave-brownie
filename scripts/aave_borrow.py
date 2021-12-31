@@ -11,7 +11,7 @@ from web3 import Web3
 # using WETH erc20 tokens with AAVE
 
 # 0.1
-amount = Web3.toWei(0.05, "ether")
+amount = Web3.toWei(0.1, "ether")
 
 def main():
     account = get_account()
@@ -27,7 +27,24 @@ def main():
     tx = lending_pool.deposit(erc20_address, amount, account.address, 0, {"from": account})
     tx.wait(1) # use wait when we make a state change
     print("Deposited!")
+    # how much did we deposit?
+    # aave has a getUserAccountData function in lending pool / https://docs.aave.com/developers/the-core-protocol/lendingpool#getuseraccountdata
+    (total_collateral_eth, total_debt_eth, available_borrow_eth) = get_borrowable_data(lending_pool, account)
+    # https://youtu.be/M576WGiDBdQ?t=34110 
+
+
+
 # https://youtu.be/M576WGiDBdQ?t=33833 until here
+def get_borrowable_data(lending_pool, account):
+    (total_collateral_eth, total_debt_eth, available_borrow_eth, current_liquidation_threshold, ltv, health_factor ) = lending_pool.getUserAccountData(account.address)
+    total_collateral_eth = Web3.fromWei(total_collateral_eth, "ether")
+    total_debt_eth = Web3.fromWei(total_debt_eth, "ether")
+    available_borrow_eth = Web3.fromWei(available_borrow_eth, "ether")
+    print(f"You have deposited total collateral eth: {total_collateral_eth}")
+    print(f"Total debt eth: {total_debt_eth}")
+    print(f"You can borrow available borrow eth: {available_borrow_eth}")
+    return( float(available_borrow_eth), float(total_debt_eth))
+
 
 
 # until here:https://youtu.be/M576WGiDBdQ?t=33476
