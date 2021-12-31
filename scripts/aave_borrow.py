@@ -11,7 +11,7 @@ from web3 import Web3
 # using WETH erc20 tokens with AAVE
 
 # 0.1
-amount = Web3.toWei(0.1, "ether")
+amount = Web3.toWei(0.05, "ether")
 
 def main():
     account = get_account()
@@ -24,6 +24,11 @@ def main():
     # approve sending out ERC20 tokens / weth
     # need an approve function
     approve_erc20(amount, lending_pool.address, erc20_address, account)
+    print("Depositing...")
+    tx = lending_pool.deposit(erc20_address, amount, account.address, 0, {"from": account})
+    tx.wait(1) # use wait when we make a state change
+    print("Deposited!")
+
 
 
 # until here:https://youtu.be/M576WGiDBdQ?t=33476
@@ -45,6 +50,7 @@ def get_lending_pool():
     #Address => get from aave documentation (https://docs.aave.com/developers/deployed-contracts/deployed-contracts)
     # if we know that we're just working with a few functions, we can create our own interface (e.g. ILendingPoolAddressProvider.sol)
     lending_pool_addresses_provider = interface.ILendingPoolAddressesProvider(config["networks"][network.show_active()]["lending_pool_addresses_provider"])
+    # lending pool address provider provides address of lending pool
     lending_pool_address = lending_pool_addresses_provider.getLendingPool()
 
     lending_pool = interface.ILendingPool(lending_pool_address)
