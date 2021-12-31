@@ -1,6 +1,6 @@
 No smart contracts, just interacting with other contracts
 
-1. Swap ETH for Weth
+1. Swap ETH for Weth via the weth contract, approve it for sending
 1. Deposit into Aave
 2. Borrow some asset with the ETH collateral
     1. Sell that borrowed asset. (Short selling)
