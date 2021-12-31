@@ -19,16 +19,15 @@ def main():
     erc20_address = config["networks"][network.show_active()]["weth_token"] 
     if network.show_active() in ["mainnet-fork"]:
         get_weth()
-    # now to deposit the weth into the lending pool.
+    # deposit the weth into the lending pool but need to approve first
     lending_pool = get_lending_pool()
     # approve sending out ERC20 tokens / weth
-    # need an approve function
     approve_erc20(amount, lending_pool.address, erc20_address, account)
     print("Depositing...")
     tx = lending_pool.deposit(erc20_address, amount, account.address, 0, {"from": account})
     tx.wait(1) # use wait when we make a state change
     print("Deposited!")
-
+# https://youtu.be/M576WGiDBdQ?t=33833 until here
 
 
 # until here:https://youtu.be/M576WGiDBdQ?t=33476

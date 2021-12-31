@@ -18,9 +18,9 @@ def get_weth():
     # weth_token => address
     # hence we can call the deposit function of the contract
     weth = interface.IWeth(config["networks"][network.show_active()]["weth_token"])
-    tx = weth.deposit({"from": account, "value": 0.05*10**18})
+    tx = weth.deposit({"from": account, "value": 0.1*10**18})
     tx.wait(1)
-    print(f"Received 0.05 WETH!")
+    print(f"Received 0.1 WETH!")
     return tx
 
 
