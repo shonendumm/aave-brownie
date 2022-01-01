@@ -24,46 +24,31 @@ def main():
     # approve sending out ERC20 tokens / weth
     approve_erc20(amount, lending_pool.address, erc20_address, account)
 
-#   function deposit(
-#     address asset,
-#     uint256 amount,
-#     address onBehalfOf,
-#     uint16 referralCode
-#   ) external;
-
     print("Depositing into lending pool...")
     tx = lending_pool.deposit(erc20_address, amount, account.address, 0, {"from": account})
     tx.wait(1) # use wait when we make a state change
     print("Deposited!")
     # how much did we deposit?
     # aave has a getUserAccountData function in lending pool / https://docs.aave.com/developers/the-core-protocol/lendingpool#getuseraccountdata
-    (available_borrow_eth, total_debt_eth) = get_borrowable_data(lending_pool, account)
+    # (available_borrow_eth, total_debt_eth) = get_borrowable_data(lending_pool, account)
+    get_borrowable_data(lending_pool, account)
     # https://youtu.be/M576WGiDBdQ?t=34110 
 
     # 0.1 Ethereum = 370.304191 Dai (DAI)
-    borrow_amount = 150 * 10**18 # 18 decimals for Dai token contract
+    borrow_amount = 300 * 10**18 # 18 decimals for Dai token contract
     asset = config["networks"][network.show_active()]["dai_token"]
-    borrow_from_lendingPool(lending_pool, asset, borrow_amount, account)
+    borrow_from_lendingPool(lending_pool, asset, borrow_amount)
     get_borrowable_data(lending_pool, account)
 
 
-def borrow_from_lendingPool(lending_pool, asset, borrow_amount, onBehalfOf, interestRateMode=1, referralCode=0):
+def borrow_from_lendingPool(lending_pool, asset, borrow_amount):
     print("")
+    account = get_account()
     lending_pool = lending_pool
-    tx = lending_pool.borrow(asset, borrow_amount, interestRateMode, referralCode, onBehalfOf, {"from": onBehalfOf})
+    tx = lending_pool.borrow(asset, borrow_amount, 1, 0, account, {"from": account})
     tx.wait(1)
     borrow_amount = Web3.fromWei(borrow_amount, "ether")
     print(f"Borrowed {borrow_amount} of Dai from lending pool!")
-
-
-#   function borrow(
-#     address asset,
-#     uint256 amount,
-#     uint256 interestRateMode,
-#     uint16 referralCode,
-#     address onBehalfOf
-#   ) external;
-
 
 
 # https://youtu.be/M576WGiDBdQ?t=33833 until here
@@ -72,11 +57,27 @@ def get_borrowable_data(lending_pool, account):
     total_collateral_eth = Web3.fromWei(total_collateral_eth, "ether")
     total_debt_eth = Web3.fromWei(total_debt_eth, "ether")
     available_borrow_eth = Web3.fromWei(available_borrow_eth, "ether")
+    current_liquidation_threshold = current_liquidation_threshold / 10000
+    ltv = ltv / 10000
     print(f"You have deposited total collateral eth: {total_collateral_eth}")
     print(f"Total debt eth: {total_debt_eth}")
     print(f"You can borrow available borrow eth: {available_borrow_eth}")
-    print(f"The health factor is {health_factor}")
-    return( float(available_borrow_eth), float(total_debt_eth))
+    print(f"The current liquidation threshold is {current_liquidation_threshold}")
+    print(f"The ltv is {ltv}")
+    calculate_health_factor(total_collateral_eth, current_liquidation_threshold, total_debt_eth)
+    # return( float(available_borrow_eth), float(total_debt_eth))
+
+
+# Health factor = (total collateral in eth * liquidation threshold) / total borrows in eth
+def calculate_health_factor(total_collateral_eth, current_liquidation_threshold, total_debt_eth):
+    total_collateral_eth = float(total_collateral_eth)
+    current_liquidation_threshold = float(current_liquidation_threshold)
+    total_debt_eth = float(total_debt_eth)
+    if total_debt_eth == 0:
+        health_factor = total_collateral_eth * current_liquidation_threshold
+    else:
+        health_factor = (total_collateral_eth * current_liquidation_threshold) / total_debt_eth
+    print(f"Your health factor is {health_factor}")
 
 
 
