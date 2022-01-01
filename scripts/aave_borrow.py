@@ -29,7 +29,7 @@ def main():
     print("Deposited!")
     # how much did we deposit?
     # aave has a getUserAccountData function in lending pool / https://docs.aave.com/developers/the-core-protocol/lendingpool#getuseraccountdata
-    (total_collateral_eth, total_debt_eth, available_borrow_eth) = get_borrowable_data(lending_pool, account)
+    (available_borrow_eth, total_debt_eth) = get_borrowable_data(lending_pool, account)
     # https://youtu.be/M576WGiDBdQ?t=34110 
 
 
@@ -43,6 +43,7 @@ def get_borrowable_data(lending_pool, account):
     print(f"You have deposited total collateral eth: {total_collateral_eth}")
     print(f"Total debt eth: {total_debt_eth}")
     print(f"You can borrow available borrow eth: {available_borrow_eth}")
+    print(f"The health factor is {health_factor}")
     return( float(available_borrow_eth), float(total_debt_eth))
 
 

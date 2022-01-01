@@ -14,10 +14,10 @@ def get_weth():
     # untill here https://youtu.be/M576WGiDBdQ?t=32211
     account = get_account()
     # because we know that we're interacting only on Kovan net here, we're not using get_contract()
-    # interface.IWeth => abi (copied from .sol file provided on tutorial's github; we can probably copy from the original)
+    # interface.IWeth => abi (copied from .sol file provided on tutorial's github; we can also copy from the original in their github)
     # weth_token => address
-    # hence we can call the deposit function of the contract
     weth = interface.IWeth(config["networks"][network.show_active()]["weth_token"])
+    # then we can call the deposit function of the contract
     tx = weth.deposit({"from": account, "value": 0.1*10**18})
     tx.wait(1)
     print(f"Received 0.1 WETH!")
