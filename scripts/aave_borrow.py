@@ -30,15 +30,22 @@ def main():
     print("Deposited!")
     # how much did we deposit?
     # aave has a getUserAccountData function in lending pool / https://docs.aave.com/developers/the-core-protocol/lendingpool#getuseraccountdata
-    # (available_borrow_eth, total_debt_eth) = get_borrowable_data(lending_pool, account)
-    borrowable_eth, total_debt = get_borrowable_data(lending_pool, account)
+
+    borrowable_eth, total_debt_eth = get_borrowable_data(lending_pool, account)
     
-    # Dai in terms of ETH
+    # Dai in terms of ETH (0.00026691243)
     dai_eth_price = get_asset_price("dai_eth_price_feed")
+    # 100% or 95% of borrowable amount, just change 1 or 0.95
+    borrowable_dai = (borrowable_eth * 1) / dai_eth_price 
+    print(f"You can borrow {borrowable_dai} Dai")
+    borrow_from_lendingPool(lending_pool, borrowable_dai, "dai_token")
+    get_borrowable_data(lending_pool, account)
 
 
-    # borrow_from_lendingPool(lending_pool)
-    # get_borrowable_data(lending_pool, account)
+
+
+
+
 
 def get_asset_price(price_feed_address):
     price_feed_address = config["networks"][network.show_active()][price_feed_address]
@@ -50,15 +57,13 @@ def get_asset_price(price_feed_address):
 
 
 
-def borrow_from_lendingPool(lending_pool):
-    # 0.1 Ethereum = 370.304191 Dai (DAI) 
-    borrow_amount = 300 * 10 ** 18 # 18 decimals for Dai token contract
-    asset = config["networks"][network.show_active()]["dai_token"]
-    print("Borrowing from pool")
+def borrow_from_lendingPool(lending_pool, amount, token):
     account = get_account()
-    lending_pool = lending_pool
-    tx = lending_pool.borrow(asset, borrow_amount, 1, 0, account, {"from": account})
-    tx.wait(1)
+    borrow_amount = amount * 10 ** 18 # 18 decimals for Dai token contract
+    asset = config["networks"][network.show_active()][token]
+    print("Borrowing from pool")
+    borrow_tx = lending_pool.borrow(asset, borrow_amount, 1, 0, account, {"from": account})
+    borrow_tx.wait(1)
     borrow_amount = Web3.fromWei(borrow_amount, "ether")
     print(f"Borrowed {borrow_amount} of Dai from lending pool!")
 
@@ -70,12 +75,12 @@ def get_borrowable_data(lending_pool, account):
     total_debt_eth = Web3.fromWei(total_debt_eth, "ether")
     available_borrow_eth = Web3.fromWei(available_borrow_eth, "ether")
     print(f"You have deposited total collateral eth: {total_collateral_eth}")
-    print(f"Total debt eth: {total_debt_eth}")
+    print(f"Total debt in eth: {total_debt_eth}")
     print(f"You can borrow available borrow eth: {available_borrow_eth}")
     print(f"LTV is {ltv}")
+    print(f"Health Factor: {health_factor}")
     calculate_health_factor(total_collateral_eth, current_liquidation_threshold, total_debt_eth)
     return( float(available_borrow_eth), float(total_debt_eth))
-
 
 # Health factor = (total collateral in eth * liquidation threshold) / total borrows in eth
 def calculate_health_factor(total_collateral_eth, current_liquidation_threshold, total_debt_eth):
@@ -86,7 +91,7 @@ def calculate_health_factor(total_collateral_eth, current_liquidation_threshold,
         health_factor = total_collateral_eth * current_liquidation_threshold
     else:
         health_factor = (total_collateral_eth * current_liquidation_threshold) / total_debt_eth
-    print(f"Your health factor is {health_factor}")
+    print(f"Your calculated health factor is {health_factor}")
 
 
 
