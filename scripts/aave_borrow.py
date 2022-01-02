@@ -43,9 +43,11 @@ def main():
 def get_asset_price(price_feed_address):
     price_feed_address = config["networks"][network.show_active()][price_feed_address]
     dai_eth_price_feed = interface.AggregatorV3Interface(price_feed_address)
-    dai_eth_price = dai_eth_price_feed.latestRoundData()[1] 
-    print(f"The price of eth in dai is {dai_eth_price}")
-    return float(dai_eth_price) # returned by .sol as int256
+    latest_price = dai_eth_price_feed.latestRoundData()[1] 
+    converted_price = Web3.fromWei(latest_price, 'ether')
+    print(f"1 dai is equal to {converted_price}")
+    return float(converted_price) # returned by .sol as int256
+
 
 
 def borrow_from_lendingPool(lending_pool):
