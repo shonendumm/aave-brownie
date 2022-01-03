@@ -31,7 +31,7 @@ def main():
 
     borrowable_eth, total_debt_eth = get_borrowable_data(lending_pool, account)
     
-    # Dai in terms of ETH (0.00026691243)
+    # 1 Dai = 0.000261494553299921 ETH
     dai_eth_price = get_asset_price("dai_eth_price_feed")
     # 100% or 95% of borrowable amount, just change 1 or 0.95
     borrowable_dai = (borrowable_eth * 0.95) / dai_eth_price 
@@ -41,6 +41,9 @@ def main():
     # Repay debt 
     repay_all(AMOUNT, lending_pool, account, "dai_token")
     get_borrowable_data(lending_pool, account)
+    # We should be repaying in DAI amount, which is total_debt_eth2 / dai_eth_price, but we don't have enough DAI, because interest increased our debt. Refer to https://github.com/smartcontractkit/full-blockchain-solidity-course-py/discussions/49
+
+
 
 # similar to borrow, we need to approve on the asset token first
 # https://youtu.be/M576WGiDBdQ?t=34929
