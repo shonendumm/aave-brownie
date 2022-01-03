@@ -4,14 +4,10 @@ from scripts.get_weth import get_weth
 from web3 import Web3
 
 
-#  until https://youtu.be/M576WGiDBdQ?t=33186
-# get ILendingPool.sol code and fixing the imports 
 
-# untill here https://youtu.be/M576WGiDBdQ?t=32552
-# using WETH erc20 tokens with AAVE
 
 # 0.1
-amount = Web3.toWei(0.1, "ether")
+AMOUNT = Web3.toWei(0.1, "ether")
 
 def main():
     account = get_account()
@@ -21,11 +17,13 @@ def main():
         get_weth()
     # deposit the weth into the lending pool but need to approve first
     lending_pool = get_lending_pool()
+    print(f"Lending pool address is {lending_pool.address}")
+
     # approve sending out ERC20 tokens / weth
-    approve_erc20(amount, lending_pool.address, erc20_address, account)
+    approve_erc20(AMOUNT, lending_pool.address, erc20_address, account)
 
     print("Depositing into lending pool...")
-    tx = lending_pool.deposit(erc20_address, amount, account.address, 0, {"from": account})
+    tx = lending_pool.deposit(erc20_address, AMOUNT, account.address, 0, {"from": account})
     tx.wait(1) # use wait when we make a state change
     print("Deposited!")
     # how much did we deposit?
@@ -36,14 +34,28 @@ def main():
     # Dai in terms of ETH (0.00026691243)
     dai_eth_price = get_asset_price("dai_eth_price_feed")
     # 100% or 95% of borrowable amount, just change 1 or 0.95
-    borrowable_dai = (borrowable_eth * 1) / dai_eth_price 
+    borrowable_dai = (borrowable_eth * 0.95) / dai_eth_price 
     print(f"You can borrow {borrowable_dai} Dai")
     borrow_from_lendingPool(lending_pool, borrowable_dai, "dai_token")
+    borrowable_eth2, total_debt_eth2 = get_borrowable_data(lending_pool, account)
+    # Repay debt 
+    repay_all(AMOUNT, lending_pool, account, "dai_token")
     get_borrowable_data(lending_pool, account)
 
-
-
-
+# similar to borrow, we need to approve on the asset token first
+# https://youtu.be/M576WGiDBdQ?t=34929
+def repay_all(amount, lending_pool, account, token_name):
+    borrowed_token_address = config["networks"][network.show_active()][token_name]
+    # approve dai_token for repayment
+    approve_erc20(
+        Web3.toWei(amount, "ether"), 
+        lending_pool.address, 
+        borrowed_token_address, 
+        account)
+    print("Repaying debt...")
+    repay_tx = lending_pool.repay(borrowed_token_address, amount, 1, account.address, {"from": account})
+    repay_tx.wait(1)
+    print(f"Repaid {repay_tx} in ETH!")
 
 
 
@@ -68,7 +80,6 @@ def borrow_from_lendingPool(lending_pool, amount, token):
     print(f"Borrowed {borrow_amount} of Dai from lending pool!")
 
 
-# https://youtu.be/M576WGiDBdQ?t=33833 until here
 def get_borrowable_data(lending_pool, account):
     (total_collateral_eth, total_debt_eth, available_borrow_eth, current_liquidation_threshold, ltv, health_factor ) = lending_pool.getUserAccountData(account.address)
     total_collateral_eth = Web3.fromWei(total_collateral_eth, "ether")
@@ -95,8 +106,7 @@ def calculate_health_factor(total_collateral_eth, current_liquidation_threshold,
 
 
 
-# until here:https://youtu.be/M576WGiDBdQ?t=33476
-#   approve function approve(address spender, uint256 value) external returns (bool success);
+
 
 def approve_erc20(amount, spender, erc20_address, account):
     print("Approving ERC20 token...")
@@ -120,3 +130,13 @@ def get_lending_pool():
     lending_pool = interface.ILendingPool(lending_pool_address)
     return lending_pool
  
+
+
+ #  https://youtu.be/M576WGiDBdQ?t=33186
+# get ILendingPool.sol code and fixing the imports 
+
+# https://youtu.be/M576WGiDBdQ?t=32552
+# using WETH erc20 tokens with AAVE
+
+# until here:https://youtu.be/M576WGiDBdQ?t=33476
+#   approve function approve(address spender, uint256 value) external returns (bool success);
